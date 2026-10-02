@@ -1,0 +1,3055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>My Virtual Cats</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  font-family:Arial,sans-serif;
+  background:#111;
+  color:white;
+  touch-action:none;
+}
+
+canvas{
+  position:fixed;
+  inset:0;
+  display:block;
+}
+
+button{
+  border:0;
+  border-radius:14px;
+  padding:12px 16px;
+  font-size:16px;
+  font-weight:bold;
+  color:white;
+  background:#5746d8;
+  box-shadow:0 4px 12px #0005;
+  cursor:pointer;
+}
+
+button:active{
+  transform:scale(.95);
+}
+
+button.secondary{
+  background:#333a;
+}
+
+button.green{
+  background:#299b62;
+}
+
+button.orange{
+  background:#d77b25;
+}
+
+button.red{
+  background:#b63d4d;
+}
+
+.hidden{
+  display:none!important;
+}
+
+/* ---------- TOP BAR ---------- */
+
+#topBar{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  height:62px;
+  z-index:20;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px;
+  background:linear-gradient(#0009,#0002);
+  pointer-events:none;
+}
+
+#topBar>*{
+  pointer-events:auto;
+}
+
+#title{
+  font-size:20px;
+  font-weight:bold;
+  margin-right:auto;
+  text-shadow:0 2px 4px #000;
+}
+
+.smallButton{
+  padding:9px 11px;
+  font-size:13px;
+}
+
+/* ---------- MESSAGE ---------- */
+
+#message{
+  position:fixed;
+  top:70px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:50;
+  padding:10px 18px;
+  background:#171717dd;
+  border-radius:20px;
+  font-weight:bold;
+  opacity:0;
+  pointer-events:none;
+  transition:.25s;
+}
+
+#message.show{
+  opacity:1;
+}
+
+/* ---------- LOOK HELP ---------- */
+
+#lookHint{
+  position:fixed;
+  right:18px;
+  bottom:22px;
+  z-index:5;
+  padding:8px 12px;
+  border-radius:15px;
+  background:#0006;
+  color:#fff9;
+  font-size:12px;
+  pointer-events:none;
+}
+
+/* ---------- MOVEMENT ---------- */
+
+#movement{
+  position:fixed;
+  left:18px;
+  bottom:24px;
+  z-index:25;
+  width:155px;
+  height:155px;
+}
+
+.move{
+  position:absolute;
+  width:52px;
+  height:52px;
+  padding:0;
+  border-radius:16px;
+  background:#20202dcc;
+  font-size:24px;
+}
+
+#up{left:52px;top:0}
+#left{left:0;top:52px}
+#down{left:52px;top:104px}
+#right{left:104px;top:52px}
+
+/* ---------- CAT PANEL ---------- */
+
+#catPanel{
+  position:fixed;
+  right:12px;
+  top:76px;
+  z-index:30;
+  width:min(330px,calc(100vw - 24px));
+  max-height:calc(100vh - 95px);
+  overflow:auto;
+  padding:15px;
+  border-radius:20px;
+  background:#171717e8;
+  backdrop-filter:blur(12px);
+  box-shadow:0 8px 30px #0008;
+}
+
+#catName{
+  font-size:25px;
+  font-weight:bold;
+}
+
+#catDescription{
+  color:#ddd;
+  margin:5px 0 10px;
+}
+
+.infoGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  font-size:13px;
+}
+
+.infoBox{
+  background:#ffffff12;
+  padding:8px;
+  border-radius:10px;
+}
+
+.stat{
+  margin-top:8px;
+}
+
+.statLabel{
+  display:flex;
+  justify-content:space-between;
+  font-size:13px;
+}
+
+.bar{
+  height:9px;
+  margin-top:4px;
+  border-radius:8px;
+  overflow:hidden;
+  background:#0008;
+}
+
+.fill{
+  height:100%;
+  width:50%;
+  background:#64d889;
+  transition:.25s;
+}
+
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-top:12px;
+}
+
+#relationships{
+  margin-top:12px;
+  font-size:13px;
+  color:#ddd;
+}
+
+/* ---------- MENU ---------- */
+
+#menu{
+  position:fixed;
+  left:50%;
+  bottom:18px;
+  transform:translateX(-50%);
+  z-index:30;
+  display:flex;
+  gap:7px;
+  padding:8px;
+  border-radius:18px;
+  background:#171717d9;
+  backdrop-filter:blur(8px);
+}
+
+#menu button{
+  font-size:13px;
+  padding:10px 12px;
+}
+
+/* ---------- OVERLAYS ---------- */
+
+.overlay{
+  position:fixed;
+  inset:0;
+  z-index:100;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#08090de8;
+  padding:18px;
+}
+
+.panel{
+  width:min(900px,100%);
+  max-height:92vh;
+  overflow:auto;
+  background:#191a22;
+  border-radius:25px;
+  padding:22px;
+  box-shadow:0 15px 50px #000;
+}
+
+.panel h1{
+  margin-top:0;
+}
+
+.closeRow{
+  display:flex;
+  justify-content:flex-end;
+  margin-bottom:5px;
+}
+
+/* ---------- ADOPTION ---------- */
+
+#catChoices{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  gap:12px;
+}
+
+.catCard{
+  background:#242631;
+  border:2px solid transparent;
+  border-radius:18px;
+  padding:14px;
+  cursor:pointer;
+}
+
+.catCard.selected{
+  border-color:#8d7cff;
+  background:#302b4b;
+}
+
+.catPreview{
+  height:100px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:70px;
+  background:#1118;
+  border-radius:15px;
+  margin-bottom:10px;
+}
+
+.catCard h3{
+  margin:4px 0;
+}
+
+.catCard p{
+  margin:3px 0;
+  font-size:13px;
+  color:#ccc;
+}
+
+#adoptInfo{
+  margin-top:15px;
+  padding:15px;
+  border-radius:16px;
+  background:#ffffff0d;
+}
+
+input{
+  width:100%;
+  padding:13px;
+  border:0;
+  border-radius:12px;
+  background:#30323c;
+  color:white;
+  font-size:16px;
+  margin:8px 0;
+}
+
+/* ---------- TRAINING ---------- */
+
+#trainingList{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:12px;
+}
+
+.trickCard{
+  padding:16px;
+  border-radius:18px;
+  background:#242631;
+}
+
+.trickCard h3{
+  margin-top:0;
+}
+
+.progress{
+  height:12px;
+  background:#0008;
+  border-radius:10px;
+  overflow:hidden;
+  margin:10px 0;
+}
+
+.progressFill{
+  height:100%;
+  width:0;
+  background:#8b7dff;
+}
+
+/* ---------- MINI GAME ---------- */
+
+#miniGame{
+  text-align:center;
+}
+
+#timingBar{
+  position:relative;
+  width:100%;
+  height:50px;
+  margin:25px 0;
+  border-radius:15px;
+  background:#292c36;
+  overflow:hidden;
+}
+
+#targetZone{
+  position:absolute;
+  top:0;
+  bottom:0;
+  background:#46bd72;
+  opacity:.75;
+}
+
+#marker{
+  position:absolute;
+  top:4px;
+  bottom:4px;
+  width:8px;
+  border-radius:8px;
+  background:white;
+}
+
+#miniResult{
+  min-height:25px;
+  font-weight:bold;
+}
+
+/* ---------- SHOP ---------- */
+
+.shopGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  gap:12px;
+}
+
+.shopItem{
+  background:#242631;
+  padding:16px;
+  border-radius:18px;
+}
+
+.price{
+  color:#ffd66b;
+  font-weight:bold;
+}
+
+/* ---------- ROOM MENU ---------- */
+
+.roomGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;
+}
+
+.roomButton{
+  min-height:110px;
+  background:#292b36;
+}
+
+/* ---------- WEATHER FX ---------- */
+
+#weatherFX{
+  position:fixed;
+  inset:0;
+  z-index:8;
+  pointer-events:none;
+  opacity:0;
+}
+
+#weatherFX.rain{
+  opacity:.28;
+  background:
+    repeating-linear-gradient(
+      110deg,
+      transparent 0 12px,
+      #b8dcff 13px 15px,
+      transparent 16px 28px
+    );
+  animation:rain 0.5s linear infinite;
+}
+
+@keyframes rain{
+  from{background-position:0 0}
+  to{background-position:-40px 90px}
+}
+
+/* ---------- TOAST ---------- */
+
+#coinDisplay{
+  position:fixed;
+  top:68px;
+  left:12px;
+  z-index:20;
+  padding:8px 12px;
+  border-radius:15px;
+  background:#0007;
+  font-weight:bold;
+}
+
+/* ---------- MOBILE ---------- */
+
+@media(max-width:650px){
+  #title{
+    font-size:16px;
+  }
+
+  #topBar button{
+    padding:7px;
+    font-size:11px;
+  }
+
+  #catPanel{
+    top:auto;
+    bottom:185px;
+    right:8px;
+    width:calc(100vw - 16px);
+    max-height:45vh;
+  }
+
+  #menu{
+    max-width:95vw;
+    overflow-x:auto;
+  }
+
+  #menu button{
+    white-space:nowrap;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div id="message"></div>
+<div id="weatherFX"></div>
+
+<div id="topBar">
+  <div id="title">🐾 My Virtual Cats</div>
+  <button class="smallButton" id="homeButton">🏠 Home</button>
+  <button class="smallButton" id="roomsButton">🚪 Rooms</button>
+  <button class="smallButton" id="shopButton">🛍️ Shop</button>
+  <button class="smallButton" id="trainingButton">🎓 Train</button>
+</div>
+
+<div id="coinDisplay">🪙 100</div>
+
+<div id="lookHint">Drag on the right side to look around</div>
+
+<div id="movement">
+  <button class="move" id="up">▲</button>
+  <button class="move" id="left">◀</button>
+  <button class="move" id="right">▶</button>
+  <button class="move" id="down">▼</button>
+</div>
+
+<div id="catPanel" class="hidden">
+  <div id="catName">Cat</div>
+  <div id="catDescription"></div>
+
+  <div class="infoGrid">
+    <div class="infoBox">🐾 Species<br><b id="species"></b></div>
+    <div class="infoBox">🧬 Breed<br><b id="breed"></b></div>
+    <div class="infoBox">🎂 Age<br><b id="age"></b></div>
+    <div class="infoBox">🎈 Birthday<br><b id="birthday"></b></div>
+    <div class="infoBox">💭 Personality<br><b id="personality"></b></div>
+    <div class="infoBox">✨ Marking<br><b id="marking"></b></div>
+  </div>
+
+  <div class="stat">
+    <div class="statLabel"><span>🍗 Hunger</span><b id="hungerText"></b></div>
+    <div class="bar"><div class="fill" id="hungerFill"></div></div>
+  </div>
+
+  <div class="stat">
+    <div class="statLabel"><span>❤️ Happiness</span><b id="happyText"></b></div>
+    <div class="bar"><div class="fill" id="happyFill"></div></div>
+  </div>
+
+  <div class="stat">
+    <div class="statLabel"><span>⚡ Energy</span><b id="energyText"></b></div>
+    <div class="bar"><div class="fill" id="energyFill"></div></div>
+  </div>
+
+  <div id="relationships"></div>
+
+  <div class="actions">
+    <button id="feedButton" class="green">🍗 Feed</button>
+    <button id="playButton">🎾 Play</button>
+    <button id="petButton">❤️ Pet</button>
+    <button id="sleepButton" class="secondary">💤 Sleep</button>
+    <button id="closeCatButton" class="red">✕ Close</button>
+  </div>
+</div>
+
+<div id="menu">
+  <button id="adoptButton">🐱 Adopt</button>
+  <button id="catListButton">🐾 My Cats</button>
+  <button id="weatherButton">☀️ Weather</button>
+</div>
+
+<!-- ADOPTION -->
+
+<div id="adoptionOverlay" class="overlay hidden">
+  <div class="panel">
+    <div class="closeRow">
+      <button id="closeAdoption" class="red">✕</button>
+    </div>
+
+    <h1>🏠 Adoption Centre</h1>
+    <p>Choose a cat to meet. Every cat has its own personality and special marking.</p>
+
+    <div id="catChoices"></div>
+
+    <div id="adoptInfo">
+      <b>Tap a cat to see more information.</b>
+    </div>
+  </div>
+</div>
+
+<!-- CAT LIST -->
+
+<div id="catsOverlay" class="overlay hidden">
+  <div class="panel">
+    <div class="closeRow">
+      <button id="closeCats" class="red">✕</button>
+    </div>
+
+    <h1>🐾 My Cats</h1>
+    <p id="catCount"></p>
+    <div id="myCatsList"></div>
+  </div>
+</div>
+
+<!-- TRAINING -->
+
+<div id="trainingOverlay" class="overlay hidden">
+  <div class="panel">
+    <div class="closeRow">
+      <button id="closeTraining" class="red">✕</button>
+    </div>
+
+    <h1>🎓 Training Room</h1>
+    <p id="trainingCatName"></p>
+    <p>Choose a trick. You'll have to play a timing mini-game instead of simply pressing Train repeatedly.</p>
+
+    <div id="trainingList"></div>
+  </div>
+</div>
+
+<!-- MINI GAME -->
+
+<div id="miniGameOverlay" class="overlay hidden">
+  <div class="panel" id="miniGame">
+    <h1>🎯 Timing Training</h1>
+    <p id="miniGameText">Tap when the marker is inside the green zone!</p>
+
+    <div id="timingBar">
+      <div id="targetZone"></div>
+      <div id="marker"></div>
+    </div>
+
+    <div id="miniResult"></div>
+
+    <button id="timingButton" class="green">TAP!</button>
+    <button id="cancelMiniGame" class="secondary">Cancel</button>
+  </div>
+</div>
+
+<!-- SHOP -->
+
+<div id="shopOverlay" class="overlay hidden">
+  <div class="panel">
+    <div class="closeRow">
+      <button id="closeShop" class="red">✕</button>
+    </div>
+
+    <h1>🛍️ Cat Shop</h1>
+    <p>Your coins: <b id="shopCoins"></b></p>
+
+    <div class="shopGrid">
+
+      <div class="shopItem">
+        <h2>🍗 Cat Food</h2>
+        <p>Restores hunger when feeding a cat.</p>
+        <p>Inventory: <b id="foodInventory"></b></p>
+        <p class="price">10 coins</p>
+        <button onclick="buyItem('food')">Buy +5</button>
+      </div>
+
+      <div class="shopItem">
+        <h2>🎾 Toy</h2>
+        <p>Lets you play with your cats.</p>
+        <p>Inventory: <b id="toyInventory"></b></p>
+        <p class="price">15 coins</p>
+        <button onclick="buyItem('toy')">Buy +2</button>
+      </div>
+
+      <div class="shopItem">
+        <h2>🛏️ Bed</h2>
+        <p>Adds another cosy bed to your home.</p>
+        <p>Beds: <b id="bedInventory"></b></p>
+        <p class="price">40 coins</p>
+        <button onclick="buyItem('bed')">Buy</button>
+      </div>
+
+      <div class="shopItem">
+        <h2>🪴 Decoration</h2>
+        <p>Unlocks another home decoration.</p>
+        <p>Decorations: <b id="decorInventory"></b></p>
+        <p class="price">25 coins</p>
+        <button onclick="buyItem('decor')">Buy</button>
+      </div>
+
+      <div class="shopItem">
+        <h2>🎨 Home Theme</h2>
+        <p>Change your home's appearance.</p>
+        <button onclick="cycleTheme()">Change Theme</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ROOMS -->
+
+<div id="roomsOverlay" class="overlay hidden">
+  <div class="panel">
+    <div class="closeRow">
+      <button id="closeRooms" class="red">✕</button>
+    </div>
+
+    <h1>🚪 Rooms</h1>
+
+    <div class="roomGrid">
+      <button class="roomButton" onclick="changeRoom('living')">
+        🛋️<br>Living Room
+      </button>
+
+      <button class="roomButton" onclick="changeRoom('bedroom')">
+        🛏️<br>Bedroom
+      </button>
+
+      <button class="roomButton" onclick="changeRoom('kitchen')">
+        🍽️<br>Kitchen
+      </button>
+
+      <button class="roomButton" onclick="changeRoom('garden')">
+        🌳<br>Garden
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- WEATHER -->
+
+<div id="weatherOverlay" class="overlay hidden">
+  <div class="panel">
+    <div class="closeRow">
+      <button id="closeWeather" class="red">✕</button>
+    </div>
+
+    <h1>🌦️ Weather & Time</h1>
+
+    <p>Current weather: <b id="weatherName"></b></p>
+    <button onclick="cycleWeather()">Change Weather</button>
+
+    <hr>
+
+    <p>Time of day: <b id="timeName"></b></p>
+    <p>The world gradually changes between day and night.</p>
+  </div>
+</div>
+
+<script type="module">
+
+import * as THREE from
+"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
+
+/* =========================================================
+   BASIC GAME DATA
+========================================================= */
+
+const SAVE_KEY = "virtualCatsBigUpdate1";
+
+const catChoices = [
+
+  {
+    id:"ginger1",
+    species:"Cat",
+    breed:"Domestic Shorthair",
+    age:"2 years",
+    birthday:"14 March",
+    personality:"Playful",
+    marking:"White chest",
+    color:0xd88942,
+    markingType:"chest"
+  },
+
+  {
+    id:"ginger2",
+    species:"Cat",
+    breed:"Domestic Shorthair",
+    age:"4 years",
+    birthday:"8 July",
+    personality:"Calm",
+    marking:"White paws",
+    color:0xc96d32,
+    markingType:"paws"
+  },
+
+  {
+    id:"tabby1",
+    species:"Cat",
+    breed:"Tabby",
+    age:"1 year",
+    birthday:"21 January",
+    personality:"Curious",
+    marking:"Dark forehead stripe",
+    color:0x8b765e,
+    markingType:"forehead"
+  },
+
+  {
+    id:"black1",
+    species:"Cat",
+    breed:"Bombay",
+    age:"3 years",
+    birthday:"2 November",
+    personality:"Brave",
+    marking:"Tiny white chin",
+    color:0x171717,
+    markingType:"chin"
+  },
+
+  {
+    id:"black2",
+    species:"Cat",
+    breed:"Domestic Shorthair",
+    age:"5 years",
+    birthday:"19 May",
+    personality:"Gentle",
+    marking:"White ear spot",
+    color:0x222222,
+    markingType:"ear"
+  },
+
+  {
+    id:"white1",
+    species:"Cat",
+    breed:"Domestic Shorthair",
+    age:"2 years",
+    birthday:"30 September",
+    personality:"Friendly",
+    marking:"Grey tail tip",
+    color:0xf0eeee,
+    markingType:"tail"
+  },
+
+  {
+    id:"grey1",
+    species:"Cat",
+    breed:"Russian Blue",
+    age:"3 years",
+    birthday:"11 February",
+    personality:"Quiet",
+    marking:"Silver forehead spot",
+    color:0x777b86,
+    markingType:"forehead"
+  },
+
+  {
+    id:"calico1",
+    species:"Cat",
+    breed:"Calico",
+    age:"2 years",
+    birthday:"5 June",
+    personality:"Energetic",
+    marking:"Orange cheek patch",
+    color:0xf0e5d2,
+    markingType:"cheek"
+  },
+
+  {
+    id:"cream1",
+    species:"Cat",
+    breed:"British Shorthair",
+    age:"4 years",
+    birthday:"17 August",
+    personality:"Sleepy",
+    marking:"Cream forehead blaze",
+    color:0xd5bd96,
+    markingType:"forehead"
+  },
+
+  {
+    id:"white2",
+    species:"Cat",
+    breed:"Siamese",
+    age:"1 year",
+    birthday:"9 December",
+    personality:"Talkative",
+    marking:"Dark ears",
+    color:0xe8e0d3,
+    markingType:"ears"
+  }
+];
+
+const tricks = [
+  {id:"sit",name:"Sit",emoji:"🪑"},
+  {id:"stay",name:"Stay",emoji:"✋"},
+  {id:"come",name:"Come",emoji:"🏃"},
+  {id:"paw",name:"Paw",emoji:"🐾"},
+  {id:"spin",name:"Spin",emoji:"🔄"}
+];
+
+let myCats = [];
+let activeCatIndex = -1;
+let selectedChoice = null;
+
+let coins = 100;
+
+let inventory = {
+  food:5,
+  toy:3,
+  bed:1,
+  decor:0
+};
+
+let currentRoom = "living";
+let weather = "sunny";
+let themeIndex = 0;
+let gameTime = 9;
+
+let relationships = {};
+
+const themes = [
+  {
+    name:"Cosy",
+    floor:0x76553e,
+    wall:0xd9c4a5
+  },
+  {
+    name:"Ocean",
+    floor:0x456878,
+    wall:0xb8dce4
+  },
+  {
+    name:"Mint",
+    floor:0x55775f,
+    wall:0xcce3d2
+  },
+  {
+    name:"Lavender",
+    floor:0x65577d,
+    wall:0xd9c9e5
+  }
+];
+
+/* =========================================================
+   SAVE / LOAD
+========================================================= */
+
+function saveGame(){
+
+  const data = {
+    myCats,
+    coins,
+    inventory,
+    currentRoom,
+    weather,
+    themeIndex,
+    gameTime,
+    relationships
+  };
+
+  localStorage.setItem(SAVE_KEY,JSON.stringify(data));
+}
+
+function loadGame(){
+
+  const raw = localStorage.getItem(SAVE_KEY);
+
+  if(!raw) return;
+
+  try{
+
+    const data = JSON.parse(raw);
+
+    myCats = data.myCats || [];
+    coins = data.coins ?? 100;
+
+    inventory = data.inventory || {
+      food:5,
+      toy:3,
+      bed:1,
+      decor:0
+    };
+
+    currentRoom = data.currentRoom || "living";
+    weather = data.weather || "sunny";
+    themeIndex = data.themeIndex || 0;
+    gameTime = data.gameTime || 9;
+    relationships = data.relationships || {};
+
+  }catch(error){
+
+    console.log("Save could not be loaded.");
+
+  }
+}
+
+/* =========================================================
+   THREE.JS
+========================================================= */
+
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(
+  70,
+  innerWidth/innerHeight,
+  .05,
+  100
+);
+
+const renderer = new THREE.WebGLRenderer({
+  antialias:true
+});
+
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled = true;
+
+document.body.appendChild(renderer.domElement);
+
+const world = new THREE.Group();
+scene.add(world);
+
+const ambient = new THREE.HemisphereLight(
+  0xffffff,
+  0x555555,
+  1.6
+);
+
+scene.add(ambient);
+
+const sun = new THREE.DirectionalLight(
+  0xffffff,
+  2
+);
+
+sun.position.set(5,10,5);
+sun.castShadow = true;
+scene.add(sun);
+
+/* =========================================================
+   PLAYER
+========================================================= */
+
+const player = {
+  x:0,
+  y:1.6,
+  z:5,
+  yaw:0,
+  pitch:0,
+  speed:3.5
+};
+
+const movement = {
+  forward:false,
+  backward:false,
+  left:false,
+  right:false
+};
+
+/* =========================================================
+   MATERIAL HELPERS
+========================================================= */
+
+function material(color){
+
+  return new THREE.MeshStandardMaterial({
+    color
+  });
+
+}
+
+function box(
+  x,y,z,
+  sx,sy,sz,
+  color
+){
+
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(sx,sy,sz),
+    material(color)
+  );
+
+  mesh.position.set(x,y,z);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+
+  world.add(mesh);
+
+  return mesh;
+}
+
+/* =========================================================
+   WORLD
+========================================================= */
+
+let catObjects = [];
+
+function clearWorld(){
+
+  while(world.children.length){
+
+    world.remove(world.children[0]);
+
+  }
+
+  catObjects = [];
+
+}
+
+function buildWorld(){
+
+  clearWorld();
+
+  const t = themes[themeIndex];
+
+  scene.background = new THREE.Color(
+    currentRoom === "garden"
+      ? 0x87b7df
+      : 0x91a4bb
+  );
+
+  if(currentRoom === "garden"){
+
+    box(0,-.15,0,24,.3,24,0x557d4c);
+
+    box(0,2,-12,24,4,.3,0x405b3d);
+    box(-12,2,0,.3,4,24,0x405b3d);
+    box(12,2,0,.3,4,24,0x405b3d);
+    box(0,2,12,24,4,.3,0x405b3d);
+
+    for(let i=0;i<7;i++){
+
+      const x=-9+Math.random()*18;
+      const z=-8+Math.random()*16;
+
+      box(x,1,z,.6,2,.6,0x68482f);
+
+      const leaves = new THREE.Mesh(
+        new THREE.SphereGeometry(1.3,12,8),
+        material(0x3c7c42)
+      );
+
+      leaves.position.set(x,2.5,z);
+      leaves.castShadow=true;
+      world.add(leaves);
+
+    }
+
+    box(-4,.2,-4,3,.4,2,0x8c704f);
+
+  }else{
+
+    box(0,-.15,0,24,.3,24,t.floor);
+
+    box(0,2,-12,24,4,.3,t.wall);
+    box(-12,2,0,.3,4,24,t.wall);
+    box(12,2,0,.3,4,24,t.wall);
+    box(0,2,12,24,4,.3,t.wall);
+
+    if(currentRoom==="living"){
+
+      box(0,1,-8,6,2,1.2,0x704a38);
+      box(-2,1,-7.4,1.2,2,.8,0x704a38);
+      box(2,1,-7.4,1.2,2,.8,0x704a38);
+
+      const rug = new THREE.Mesh(
+        new THREE.BoxGeometry(7,.05,5),
+        material(0xb38a72)
+      );
+
+      rug.position.y=.04;
+      rug.position.z=1;
+      world.add(rug);
+
+      box(5,.5,4,1,.9,1,0x9b734c);
+
+    }
+
+    if(currentRoom==="bedroom"){
+
+      box(0,.6,-7,5,1,3,0xeee7dc);
+      box(0,1.8,-8.2,5,2,.4,0x74526a);
+
+      box(-6,1,-4,2,2,1,0x684936);
+
+    }
+
+    if(currentRoom==="kitchen"){
+
+      box(0,1,-8,9,2,1,0xddd3bd);
+      box(-3,.8,-5,1.4,1.6,1.4,0xc9c1b1);
+      box(3,.8,-5,1.4,1.6,1.4,0xc9c1b1);
+
+    }
+
+  }
+
+  createRoomObjects();
+
+  createCatsInWorld();
+
+  placePlayer();
+
+  updateLighting();
+
+}
+
+/* =========================================================
+   FURNITURE
+========================================================= */
+
+function createRoomObjects(){
+
+  /* Food bowl */
+
+  const bowl = new THREE.Mesh(
+    new THREE.CylinderGeometry(.55,.7,.15,24),
+    material(0x9c4f65)
+  );
+
+  bowl.position.set(-4,.1,3);
+  world.add(bowl);
+
+  /* Toy */
+
+  const toy = new THREE.Mesh(
+    new THREE.SphereGeometry(.35,16,12),
+    material(0xd7a634)
+  );
+
+  toy.position.set(3,.35,3);
+  toy.castShadow=true;
+  world.add(toy);
+
+  /* Bed */
+
+  const bed = new THREE.Mesh(
+    new THREE.BoxGeometry(2.8,.35,2),
+    material(0x6f87ad)
+  );
+
+  bed.position.set(-4,.3,-5);
+  bed.castShadow=true;
+  world.add(bed);
+
+}
+
+/* =========================================================
+   CAT VISUALS
+========================================================= */
+
+function createCatVisual(data){
+
+  const group = new THREE.Group();
+
+  group.userData.catId = data.id;
+
+  const body = new THREE.Mesh(
+    new THREE.SphereGeometry(.62,16,12),
+    material(data.color)
+  );
+
+  body.scale.set(1.15,.75,1.5);
+  body.position.y=.75;
+  body.castShadow=true;
+
+  group.add(body);
+
+  const head = new THREE.Mesh(
+    new THREE.SphereGeometry(.48,16,12),
+    material(data.color)
+  );
+
+  head.position.set(0,1.35,.15);
+  head.castShadow=true;
+  group.add(head);
+
+  const earGeo = new THREE.ConeGeometry(.25,.55,4);
+
+  const ear1 = new THREE.Mesh(
+    earGeo,
+    material(data.color)
+  );
+
+  ear1.position.set(-.28,1.75,.12);
+  ear1.rotation.z=-.35;
+  group.add(ear1);
+
+  const ear2 = new THREE.Mesh(
+    earGeo,
+    material(data.color)
+  );
+
+  ear2.position.set(.28,1.75,.12);
+  ear2.rotation.z=.35;
+  group.add(ear2);
+
+  const eyeMat = material(0x111111);
+
+  const eye1 = new THREE.Mesh(
+    new THREE.SphereGeometry(.055,8,8),
+    eyeMat
+  );
+
+  eye1.position.set(-.17,1.42,.58);
+  group.add(eye1);
+
+  const eye2 = new THREE.Mesh(
+    new THREE.SphereGeometry(.055,8,8),
+    eyeMat
+  );
+
+  eye2.position.set(.17,1.42,.58);
+  group.add(eye2);
+
+  const nose = new THREE.Mesh(
+    new THREE.SphereGeometry(.07,8,8),
+    material(0xe58d9d)
+  );
+
+  nose.position.set(0,1.29,.62);
+  group.add(nose);
+
+  const tail = new THREE.Mesh(
+    new THREE.CapsuleGeometry(.12,.9,4,8),
+    material(data.color)
+  );
+
+  tail.position.set(0,.85,-1.1);
+  tail.rotation.x=-.8;
+  group.add(tail);
+
+  addMarking(group,data);
+
+  return group;
+}
+
+function addMarking(group,data){
+
+  let mark;
+
+  if(data.markingType==="chest"){
+
+    mark = new THREE.Mesh(
+      new THREE.SphereGeometry(.28,12,8),
+      material(0xf5eee2)
+    );
+
+    mark.scale.set(1,.8,.35);
+    mark.position.set(0,.82,.67);
+    group.add(mark);
+
+  }
+
+  if(data.markingType==="paws"){
+
+    for(const x of [-.35,.35]){
+
+      mark = new THREE.Mesh(
+        new THREE.SphereGeometry(.18,10,8),
+        material(0xf5eee2)
+      );
+
+      mark.position.set(x,.28,.65);
+      group.add(mark);
+
+    }
+
+  }
+
+  if(data.markingType==="forehead"){
+
+    mark = new THREE.Mesh(
+      new THREE.BoxGeometry(.09,.35,.04),
+      material(0xe9e2d4)
+    );
+
+    mark.position.set(0,1.6,.58);
+    group.add(mark);
+
+  }
+
+  if(data.markingType==="chin"){
+
+    mark = new THREE.Mesh(
+      new THREE.SphereGeometry(.13,10,8),
+      material(0xf4f1ea)
+    );
+
+    mark.position.set(0,1.25,.6);
+    group.add(mark);
+
+  }
+
+  if(data.markingType==="ear"){
+
+    mark = new THREE.Mesh(
+      new THREE.SphereGeometry(.1,10,8),
+      material(0xf4f1ea)
+    );
+
+    mark.position.set(.29,1.72,.32);
+    group.add(mark);
+
+  }
+
+  if(data.markingType==="tail"){
+
+    mark = new THREE.Mesh(
+      new THREE.SphereGeometry(.18,10,8),
+      material(0x777777)
+    );
+
+    mark.position.set(0,.95,-1.55);
+    group.add(mark);
+
+  }
+
+  if(data.markingType==="cheek"){
+
+    mark = new THREE.Mesh(
+      new THREE.SphereGeometry(.16,10,8),
+      material(0xc87d42)
+    );
+
+    mark.position.set(-.35,1.38,.55);
+    group.add(mark);
+
+  }
+
+  if(data.markingType==="ears"){
+
+    const earMat=material(0x665047);
+
+    for(const x of [-.28,.28]){
+
+      mark = new THREE.Mesh(
+        new THREE.SphereGeometry(.13,10,8),
+        earMat
+      );
+
+      mark.position.set(x,1.73,.27);
+      group.add(mark);
+
+    }
+
+  }
+
+}
+
+/* =========================================================
+   CAT WORLD
+========================================================= */
+
+function createCatsInWorld(){
+
+  myCats.forEach((data,index)=>{
+
+    const obj=createCatVisual(data);
+
+    const angle=(index/myCats.length)*Math.PI*2;
+
+    obj.position.set(
+      Math.cos(angle)*3,
+      0,
+      Math.sin(angle)*3
+    );
+
+    obj.userData.catIndex=index;
+
+    data.object=obj;
+
+    catObjects.push(obj);
+
+    world.add(obj);
+
+  });
+
+}
+
+function updateCats(dt){
+
+  myCats.forEach((cat,index)=>{
+
+    if(!cat.object) return;
+
+    if(!cat.aiTarget){
+
+      cat.aiTarget={
+        x:(Math.random()-.5)*16,
+        z:(Math.random()-.5)*12,
+        timer:2+Math.random()*5
+      };
+
+    }
+
+    cat.aiTarget.timer-=dt;
+
+    const dx=cat.aiTarget.x-cat.object.position.x;
+    const dz=cat.aiTarget.z-cat.object.position.z;
+
+    const distance=Math.hypot(dx,dz);
+
+    if(cat.energy<20){
+
+      cat.aiTarget.timer=0;
+
+    }
+
+    if(cat.aiTarget.timer<=0){
+
+      cat.aiTarget={
+        x:(Math.random()-.5)*16,
+        z:(Math.random()-.5)*12,
+        timer:2+Math.random()*5
+      };
+
+    }
+
+    if(distance>.5 && cat.energy>15){
+
+      const speed=.55;
+
+      cat.object.position.x +=
+        dx/distance*speed*dt;
+
+      cat.object.position.z +=
+        dz/distance*speed*dt;
+
+      cat.object.rotation.y=
+        Math.atan2(dx,dz);
+
+    }
+
+    /* Occasionally notice the player */
+
+    const pdx=player.x-cat.object.position.x;
+    const pdz=player.z-cat.object.position.z;
+
+    const pd=Math.hypot(pdx,pdz);
+
+    if(pd<3 && Math.random()<dt*.08){
+
+      cat.aiTarget={
+        x:player.x+(Math.random()-.5)*2,
+        z:player.z+(Math.random()-.5)*2,
+        timer:3
+      };
+
+    }
+
+  });
+
+  updateRelationships(dt);
+}
+
+/* =========================================================
+   RELATIONSHIPS
+========================================================= */
+
+function relationshipKey(a,b){
+
+  return [a,b].sort().join("|");
+
+}
+
+function updateRelationships(dt){
+
+  if(myCats.length<2) return;
+
+  for(let i=0;i<myCats.length;i++){
+
+    for(let j=i+1;j<myCats.length;j++){
+
+      const a=myCats[i];
+      const b=myCats[j];
+
+      if(!a.object || !b.object) continue;
+
+      const distance=a.object.position.distanceTo(
+        b.object.position
+      );
+
+      if(distance<2.5){
+
+        const key=relationshipKey(a.id,b.id);
+
+        relationships[key]=Math.min(
+          100,
+          (relationships[key]||0)+dt*.35
+        );
+
+      }
+
+    }
+
+  }
+
+}
+
+/* =========================================================
+   PLAYER / CAMERA
+========================================================= */
+
+function placePlayer(){
+
+  player.x=0;
+  player.z=5;
+  player.yaw=0;
+  player.pitch=0;
+
+  updateCamera();
+
+}
+
+function updateCamera(){
+
+  camera.position.set(
+    player.x,
+    player.y,
+    player.z
+  );
+
+  camera.rotation.order="YXZ";
+
+  camera.rotation.y=player.yaw;
+  camera.rotation.x=player.pitch;
+
+}
+
+function movePlayer(dt){
+
+  let forward=0;
+  let strafe=0;
+
+  if(movement.forward) forward+=1;
+  if(movement.backward) forward-=1;
+  if(movement.right) strafe+=1;
+  if(movement.left) strafe-=1;
+
+  if(forward===0 && strafe===0){
+
+    updateCamera();
+    return;
+
+  }
+
+  const length=Math.hypot(forward,strafe);
+
+  forward/=length;
+  strafe/=length;
+
+  const speed=player.speed*dt;
+
+  const sin=Math.sin(player.yaw);
+  const cos=Math.cos(player.yaw);
+
+  player.x +=
+    (-sin*forward + cos*strafe)*speed;
+
+  player.z +=
+    (-cos*forward - sin*strafe)*speed;
+
+  player.x=Math.max(-10.5,Math.min(10.5,player.x));
+  player.z=Math.max(-10.5,Math.min(10.5,player.z));
+
+  updateCamera();
+
+}
+
+/* =========================================================
+   BUTTON MOVEMENT
+========================================================= */
+
+function holdButton(id,key){
+
+  const el=document.getElementById(id);
+
+  const start=e=>{
+    e.preventDefault();
+    movement[key]=true;
+  };
+
+  const end=e=>{
+    e.preventDefault();
+    movement[key]=false;
+  };
+
+  el.addEventListener("pointerdown",start);
+  el.addEventListener("pointerup",end);
+  el.addEventListener("pointercancel",end);
+  el.addEventListener("pointerleave",end);
+
+}
+
+holdButton("up","forward");
+holdButton("down","backward");
+holdButton("left","left");
+holdButton("right","right");
+
+/* Keyboard */
+
+addEventListener("keydown",e=>{
+
+  if(e.key==="w"||e.key==="ArrowUp")
+    movement.forward=true;
+
+  if(e.key==="s"||e.key==="ArrowDown")
+    movement.backward=true;
+
+  if(e.key==="a"||e.key==="ArrowLeft")
+    movement.left=true;
+
+  if(e.key==="d"||e.key==="ArrowRight")
+    movement.right=true;
+
+});
+
+addEventListener("keyup",e=>{
+
+  if(e.key==="w"||e.key==="ArrowUp")
+    movement.forward=false;
+
+  if(e.key==="s"||e.key==="ArrowDown")
+    movement.backward=false;
+
+  if(e.key==="a"||e.key==="ArrowLeft")
+    movement.left=false;
+
+  if(e.key==="d"||e.key==="ArrowRight")
+    movement.right=false;
+
+});
+
+/* =========================================================
+   LOOK CONTROL
+========================================================= */
+
+let looking=false;
+let lastPointerX=0;
+let lastPointerY=0;
+let pointerMoved=false;
+
+renderer.domElement.addEventListener(
+  "pointerdown",
+  e=>{
+
+    looking=true;
+
+    lastPointerX=e.clientX;
+    lastPointerY=e.clientY;
+    pointerMoved=false;
+
+    renderer.domElement.setPointerCapture?.(e.pointerId);
+
+  }
+);
+
+renderer.domElement.addEventListener(
+  "pointermove",
+  e=>{
+
+    if(!looking) return;
+
+    const dx=e.clientX-lastPointerX;
+    const dy=e.clientY-lastPointerY;
+
+    if(Math.abs(dx)+Math.abs(dy)>5)
+      pointerMoved=true;
+
+    /* Only drag the camera when starting on the right side */
+
+    if(lastPointerX>innerWidth*.45){
+
+      player.yaw-=dx*.006;
+      player.pitch-=dy*.006;
+
+      player.pitch=Math.max(
+        -.9,
+        Math.min(.9,player.pitch)
+      );
+
+      updateCamera();
+
+    }
+
+    lastPointerX=e.clientX;
+    lastPointerY=e.clientY;
+
+  }
+);
+
+renderer.domElement.addEventListener(
+  "pointerup",
+  e=>{
+
+    looking=false;
+
+    if(!pointerMoved){
+
+      selectCatAtScreenPosition(
+        e.clientX,
+        e.clientY
+      );
+
+    }
+
+  }
+);
+
+/* =========================================================
+   CAT SELECTION
+========================================================= */
+
+const raycaster=new THREE.Raycaster();
+const pointer=new THREE.Vector2();
+
+function selectCatAtScreenPosition(x,y){
+
+  pointer.x=(x/innerWidth)*2-1;
+  pointer.y=-(y/innerHeight)*2+1;
+
+  raycaster.setFromCamera(pointer,camera);
+
+  const hits=raycaster.intersectObjects(
+    catObjects,
+    true
+  );
+
+  if(!hits.length) return;
+
+  let object=hits[0].object;
+
+  while(object && object.parent){
+
+    if(object.userData.catIndex!==undefined){
+
+      selectCat(object.userData.catIndex);
+      return;
+
+    }
+
+    object=object.parent;
+
+  }
+
+}
+
+function selectCat(index){
+
+  if(index<0 || index>=myCats.length) return;
+
+  activeCatIndex=index;
+
+  updateCatPanel();
+
+  document.getElementById("catPanel")
+    .classList.remove("hidden");
+
+}
+
+/* =========================================================
+   CAT PANEL
+========================================================= */
+
+function updateCatPanel(){
+
+  const cat=myCats[activeCatIndex];
+
+  if(!cat) return;
+
+  document.getElementById("catName").textContent=
+    cat.name;
+
+  document.getElementById("catDescription").textContent=
+    cat.personality+" • "+cat.breed;
+
+  document.getElementById("species").textContent=
+    cat.species;
+
+  document.getElementById("breed").textContent=
+    cat.breed;
+
+  document.getElementById("age").textContent=
+    cat.age;
+
+  document.getElementById("birthday").textContent=
+    cat.birthday;
+
+  document.getElementById("personality").textContent=
+    cat.personality;
+
+  document.getElementById("marking").textContent=
+    cat.marking;
+
+  setBar("hunger",cat.hunger);
+  setBar("happy",cat.happiness);
+  setBar("energy",cat.energy);
+
+  let relationText="<b>🐾 Friendships</b><br>";
+
+  let found=false;
+
+  myCats.forEach(other=>{
+
+    if(other.id===cat.id) return;
+
+    const value=
+      relationships[
+        relationshipKey(cat.id,other.id)
+      ]||0;
+
+    relationText+=
+      `${other.name}: ${Math.round(value)}/100<br>`;
+
+    found=true;
+
+  });
+
+  if(!found)
+    relationText+="This cat lives alone for now.";
+
+  document.getElementById("relationships")
+    .innerHTML=relationText;
+
+}
+
+function setBar(type,value){
+
+  const rounded=Math.round(value);
+
+  document.getElementById(
+    type+"Text"
+  ).textContent=rounded+"/100";
+
+  document.getElementById(
+    type+"Fill"
+  ).style.width=rounded+"%";
+
+}
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+function selectedCat(){
+
+  return myCats[activeCatIndex];
+
+}
+
+document.getElementById("feedButton").onclick=()=>{
+
+  const cat=selectedCat();
+
+  if(!cat) return;
+
+  if(inventory.food<=0){
+
+    showMessage("You're out of food! 🛍️");
+    return;
+
+  }
+
+  inventory.food--;
+
+  cat.hunger=Math.min(
+    100,
+    cat.hunger+30
+  );
+
+  cat.happiness=Math.min(
+    100,
+    cat.happiness+5
+  );
+
+  coins+=2;
+
+  updateCatPanel();
+  updateShopUI();
+  saveGame();
+
+  showMessage(cat.name+" enjoyed their food! 🍗");
+
+};
+
+document.getElementById("playButton").onclick=()=>{
+
+  const cat=selectedCat();
+
+  if(!cat) return;
+
+  if(inventory.toy<=0){
+
+    showMessage("You need a toy! Visit the shop. 🛍️");
+    return;
+
+  }
+
+  if(cat.energy<10){
+
+    showMessage(cat.name+" is too tired to play.");
+    return;
+
+  }
+
+  inventory.toy--;
+
+  cat.happiness=Math.min(
+    100,
+    cat.happiness+25
+  );
+
+  cat.energy=Math.max(
+    0,
+    cat.energy-15
+  );
+
+  coins+=3;
+
+  updateCatPanel();
+  updateShopUI();
+  saveGame();
+
+  showMessage(cat.name+" had fun playing! 🎾");
+
+};
+
+document.getElementById("petButton").onclick=()=>{
+
+  const cat=selectedCat();
+
+  if(!cat) return;
+
+  cat.happiness=Math.min(
+    100,
+    cat.happiness+12
+  );
+
+  coins+=1;
+
+  updateCatPanel();
+  saveGame();
+
+  showMessage(cat.name+" loved the petting! ❤️");
+
+};
+
+document.getElementById("sleepButton").onclick=()=>{
+
+  const cat=selectedCat();
+
+  if(!cat) return;
+
+  cat.energy=Math.min(
+    100,
+    cat.energy+40
+  );
+
+  cat.happiness=Math.min(
+    100,
+    cat.happiness+5
+  );
+
+  saveGame();
+
+  updateCatPanel();
+
+  showMessage(cat.name+" had a nice nap! 💤");
+
+};
+
+document.getElementById("closeCatButton").onclick=()=>{
+
+  document.getElementById("catPanel")
+    .classList.add("hidden");
+
+};
+
+/* =========================================================
+   NEEDS
+========================================================= */
+
+let needsTimer=0;
+
+function updateNeeds(dt){
+
+  needsTimer+=dt;
+
+  if(needsTimer<5) return;
+
+  needsTimer=0;
+
+  myCats.forEach(cat=>{
+
+    cat.hunger=Math.max(
+      0,
+      cat.hunger-1
+    );
+
+    cat.happiness=Math.max(
+      0,
+      cat.happiness-.7
+    );
+
+    cat.energy=Math.max(
+      0,
+      cat.energy-.5
+    );
+
+  });
+
+  if(activeCatIndex>=0)
+    updateCatPanel();
+
+  saveGame();
+
+}
+
+/* =========================================================
+   ADOPTION
+========================================================= */
+
+function openAdoption(){
+
+  buildAdoptionCards();
+
+  document.getElementById("adoptionOverlay")
+    .classList.remove("hidden");
+
+}
+
+function buildAdoptionCards(){
+
+  const container=
+    document.getElementById("catChoices");
+
+  container.innerHTML="";
+
+  catChoices.forEach(choice=>{
+
+    const alreadyOwned=
+      myCats.some(c=>c.choiceId===choice.id);
+
+    const card=document.createElement("div");
+
+    card.className="catCard";
+
+    card.innerHTML=`
+      <div class="catPreview">
+        ${getCatEmoji(choice)}
+      </div>
+
+      <h3>${choice.breed}</h3>
+
+      <p>Age: ${choice.age}</p>
+      <p>Personality: ${choice.personality}</p>
+      <p>Marking: ${choice.marking}</p>
+
+      ${
+        alreadyOwned
+          ? "<p>✅ Already adopted</p>"
+          : ""
+      }
+    `;
+
+    card.onclick=()=>{
+
+      selectedChoice=choice;
+
+      document
+        .querySelectorAll(".catCard")
+        .forEach(x=>x.classList.remove("selected"));
+
+      card.classList.add("selected");
+
+      showAdoptionInfo();
+
+    };
+
+    container.appendChild(card);
+
+  });
+
+}
+
+function getCatEmoji(choice){
+
+  if(choice.color===0x171717 ||
+     choice.color===0x222222)
+    return "🐈‍⬛";
+
+  if(choice.color===0xf0eeee ||
+     choice.color===0xe8e0d3)
+    return "🐈";
+
+  return "🐱";
+
+}
+
+function showAdoptionInfo(){
+
+  const choice=selectedChoice;
+
+  if(!choice) return;
+
+  const info=document.getElementById("adoptInfo");
+
+  const already=myCats.some(
+    c=>c.choiceId===choice.id
+  );
+
+  info.innerHTML=`
+
+    <h2>${getCatEmoji(choice)} ${choice.breed}</h2>
+
+    <p>
+      <b>Age:</b> ${choice.age}<br>
+      <b>Birthday:</b> ${choice.birthday}<br>
+      <b>Personality:</b> ${choice.personality}<br>
+      <b>Special marking:</b> ${choice.marking}
+    </p>
+
+    ${
+      already
+      ? "<p>You've already adopted this cat.</p>"
+      : `
+        <input id="newCatName"
+               maxlength="18"
+               placeholder="Choose your cat's name">
+
+        <button
+          class="green"
+          id="confirmAdopt">
+          ❤️ Adopt This Cat
+        </button>
+      `
+    }
+  `;
+
+  const button=
+    document.getElementById("confirmAdopt");
+
+  if(button){
+
+    button.onclick=adoptSelected;
+
+  }
+
+}
+
+function adoptSelected(){
+
+  if(!selectedChoice) return;
+
+  if(myCats.length>=5){
+
+    showMessage("You can have up to 5 cats at home.");
+    return;
+
+  }
+
+  const nameInput=
+    document.getElementById("newCatName");
+
+  let name=
+    nameInput?.value.trim();
+
+  if(!name)
+    name="Cat";
+
+  const choice=selectedChoice;
+
+  const cat={
+
+    id:
+      choice.id+"_"+Date.now(),
+
+    choiceId:
+      choice.id,
+
+    name,
+
+    species:
+      choice.species,
+
+    breed:
+      choice.breed,
+
+    age:
+      choice.age,
+
+    birthday:
+      choice.birthday,
+
+    personality:
+      choice.personality,
+
+    marking:
+      choice.marking,
+
+    color:
+      choice.color,
+
+    markingType:
+      choice.markingType,
+
+    hunger:80,
+    happiness:80,
+    energy:80,
+
+    trickProgress:{
+      sit:0,
+      stay:0,
+      come:0,
+      paw:0,
+      spin:0
+    },
+
+    aiTarget:null
+
+  };
+
+  myCats.push(cat);
+
+  if(activeCatIndex===-1)
+    activeCatIndex=0;
+
+  saveGame();
+
+  document.getElementById("adoptionOverlay")
+    .classList.add("hidden");
+
+  buildWorld();
+
+  selectCat(myCats.length-1);
+
+  showMessage(name+" joined your family! 🎉");
+
+}
+
+/* =========================================================
+   MY CATS
+========================================================= */
+
+function openCatList(){
+
+  const list=document.getElementById("myCatsList");
+
+  list.innerHTML="";
+
+  document.getElementById("catCount").textContent=
+    `${myCats.length}/5 cats adopted`;
+
+  if(!myCats.length){
+
+    list.innerHTML=
+      "<p>You don't have any cats yet. Visit the Adoption Centre!</p>";
+
+    return;
+
+  }
+
+  myCats.forEach((cat,index)=>{
+
+    const button=document.createElement("button");
+
+    button.style.display="block";
+    button.style.width="100%";
+    button.style.margin="8px 0";
+    button.style.textAlign="left";
+
+    button.innerHTML=
+      `${getCatEmoji(cat)} ${cat.name} — ${cat.breed}`;
+
+    button.onclick=()=>{
+
+      activeCatIndex=index;
+
+      document.getElementById("catsOverlay")
+        .classList.add("hidden");
+
+      updateCatPanel();
+
+      document.getElementById("catPanel")
+        .classList.remove("hidden");
+
+    };
+
+    list.appendChild(button);
+
+  });
+
+}
+
+/* =========================================================
+   TRAINING
+========================================================= */
+
+function openTraining(){
+
+  if(myCats.length===0){
+
+    showMessage("Adopt a cat before training!");
+
+    return;
+
+  }
+
+  if(activeCatIndex<0)
+    activeCatIndex=0;
+
+  buildTrainingList();
+
+  document.getElementById("trainingOverlay")
+    .classList.remove("hidden");
+
+}
+
+function buildTrainingList(){
+
+  const cat=selectedCat();
+
+  if(!cat) return;
+
+  document.getElementById("trainingCatName").textContent=
+    `Training: ${cat.name}`;
+
+  const list=
+    document.getElementById("trainingList");
+
+  list.innerHTML="";
+
+  tricks.forEach(trick=>{
+
+    const progress=
+      cat.trickProgress[trick.id]||0;
+
+    const card=document.createElement("div");
+
+    card.className="trickCard";
+
+    card.innerHTML=`
+
+      <h3>
+        ${trick.emoji} ${trick.name}
+      </h3>
+
+      <div class="progress">
+        <div class="progressFill"
+             style="width:${progress}%">
+        </div>
+      </div>
+
+      <p>${Math.round(progress)}% learned</p>
+
+      <button>
+        Train
+      </button>
+    `;
+
+    card.querySelector("button")
+      .onclick=()=>startTrainingMiniGame(trick);
+
+    list.appendChild(card);
+
+  });
+
+}
+
+let miniGameAnimation=null;
+let miniGameRunning=false;
+let miniGameTrick=null;
+let markerPosition=0;
+let markerDirection=1;
+let targetStart=35;
+let targetWidth=25;
+
+function startTrainingMiniGame(trick){
+
+  miniGameTrick=trick;
+
+  markerPosition=0;
+  markerDirection=1;
+
+  targetStart=
+    20+Math.random()*45;
+
+  targetWidth=
+    20+Math.random()*15;
+
+  document.getElementById("targetZone")
+    .style.left=targetStart+"%";
+
+  document.getElementById("targetZone")
+    .style.width=targetWidth+"%";
+
+  document.getElementById("marker")
+    .style.left="0%";
+
+  document.getElementById("miniResult")
+    .textContent="";
+
+  document.getElementById("miniGameOverlay")
+    .classList.remove("hidden");
+
+  miniGameRunning=true;
+
+  runMiniGame();
+
+}
+
+function runMiniGame(){
+
+  if(!miniGameRunning) return;
+
+  markerPosition+=markerDirection*.9;
+
+  if(markerPosition>=100){
+
+    markerPosition=100;
+    markerDirection=-1;
+
+  }
+
+  if(markerPosition<=0){
+
+    markerPosition=0;
+    markerDirection=1;
+
+  }
+
+  document.getElementById("marker")
+    .style.left=markerPosition+"%";
+
+  miniGameAnimation=
+    requestAnimationFrame(runMiniGame);
+
+}
+
+function finishMiniGame(){
+
+  if(!miniGameRunning) return;
+
+  miniGameRunning=false;
+
+  cancelAnimationFrame(miniGameAnimation);
+
+  const inside=
+    markerPosition>=targetStart &&
+    markerPosition<=targetStart+targetWidth;
+
+  const cat=selectedCat();
+
+  if(!cat) return;
+
+  if(inside){
+
+    cat.trickProgress[miniGameTrick.id]=
+      Math.min(
+        100,
+        (cat.trickProgress[miniGameTrick.id]||0)+20
+      );
+
+    cat.energy=Math.max(
+      0,
+      cat.energy-5
+    );
+
+    cat.happiness=Math.min(
+      100,
+      cat.happiness+3
+    );
+
+    coins+=5;
+
+    document.getElementById("miniResult")
+      .textContent=
+      "🎉 Great job! "+cat.name+
+      " learned more of the trick!";
+
+  }else{
+
+    cat.energy=Math.max(
+      0,
+      cat.energy-1
+    );
+
+    document.getElementById("miniResult")
+      .textContent=
+      "Almost! Try again.";
+
+  }
+
+  saveGame();
+  updateCatPanel();
+
+  setTimeout(()=>{
+
+    document.getElementById("miniGameOverlay")
+      .classList.add("hidden");
+
+    buildTrainingList();
+
+  },1000);
+
+}
+
+document.getElementById("timingButton")
+  .onclick=finishMiniGame;
+
+document.getElementById("cancelMiniGame")
+  .onclick=()=>{
+
+    miniGameRunning=false;
+
+    cancelAnimationFrame(miniGameAnimation);
+
+    document.getElementById("miniGameOverlay")
+      .classList.add("hidden");
+
+  };
+
+/* =========================================================
+   SHOP
+========================================================= */
+
+function openShop(){
+
+  updateShopUI();
+
+  document.getElementById("shopOverlay")
+    .classList.remove("hidden");
+
+}
+
+function updateShopUI(){
+
+  document.getElementById("shopCoins")
+    .textContent=coins;
+
+  document.getElementById("foodInventory")
+    .textContent=inventory.food;
+
+  document.getElementById("toyInventory")
+    .textContent=inventory.toy;
+
+  document.getElementById("bedInventory")
+    .textContent=inventory.bed;
+
+  document.getElementById("decorInventory")
+    .textContent=inventory.decor;
+
+  document.getElementById("coinDisplay")
+    .textContent="🪙 "+coins;
+
+}
+
+window.buyItem=function(item){
+
+  const prices={
+    food:10,
+    toy:15,
+    bed:40,
+    decor:25
+  };
+
+  const price=prices[item];
+
+  if(coins<price){
+
+    showMessage("You don't have enough coins.");
+    return;
+
+  }
+
+  coins-=price;
+
+  if(item==="food")
+    inventory.food+=5;
+
+  if(item==="toy")
+    inventory.toy+=2;
+
+  if(item==="bed")
+    inventory.bed++;
+
+  if(item==="decor")
+    inventory.decor++;
+
+  saveGame();
+  updateShopUI();
+
+  showMessage("Purchase complete! 🛍️");
+
+};
+
+window.cycleTheme=function(){
+
+  themeIndex=
+    (themeIndex+1)%themes.length;
+
+  saveGame();
+  buildWorld();
+
+  showMessage(
+    "Home theme: "+themes[themeIndex].name
+  );
+
+};
+
+/* =========================================================
+   ROOMS
+========================================================= */
+
+window.changeRoom=function(room){
+
+  currentRoom=room;
+
+  document.getElementById("roomsOverlay")
+    .classList.add("hidden");
+
+  buildWorld();
+
+  showMessage(
+    room.charAt(0).toUpperCase()+
+    room.slice(1)
+  );
+
+  saveGame();
+
+};
+
+function openRooms(){
+
+  document.getElementById("roomsOverlay")
+    .classList.remove("hidden");
+
+}
+
+/* =========================================================
+   WEATHER
+========================================================= */
+
+window.cycleWeather=function(){
+
+  const list=[
+    "sunny",
+    "cloudy",
+    "rainy"
+  ];
+
+  const index=list.indexOf(weather);
+
+  weather=list[
+    (index+1)%list.length
+  ];
+
+  updateWeather();
+
+  saveGame();
+
+  showMessage(
+    "Weather: "+weather
+  );
+
+};
+
+function updateWeather(){
+
+  const fx=
+    document.getElementById("weatherFX");
+
+  fx.className="";
+
+  if(weather==="rainy")
+    fx.classList.add("rain");
+
+  document.getElementById("weatherName")
+    .textContent=
+      weather.charAt(0).toUpperCase()+
+      weather.slice(1);
+
+}
+
+function updateLighting(){
+
+  const night=
+    gameTime<6 ||
+    gameTime>19;
+
+  if(night){
+
+    ambient.intensity=.45;
+    sun.intensity=.35;
+
+    scene.background=new THREE.Color(
+      0x17213c
+    );
+
+  }else{
+
+    ambient.intensity=1.5;
+    sun.intensity=1.8;
+
+    if(currentRoom==="garden")
+      scene.background=
+        new THREE.Color(0x87b7df);
+    else
+      scene.background=
+        new THREE.Color(0x91a4bb);
+
+  }
+
+  document.getElementById("timeName")
+    .textContent=
+      Math.floor(gameTime)+":00";
+
+}
+
+let timeTimer=0;
+
+function updateTime(dt){
+
+  timeTimer+=dt;
+
+  if(timeTimer>10){
+
+    timeTimer=0;
+
+    gameTime+=.15;
+
+    if(gameTime>=24)
+      gameTime=0;
+
+    updateLighting();
+
+  }
+
+}
+
+/* =========================================================
+   UI EVENTS
+========================================================= */
+
+document.getElementById("adoptButton")
+  .onclick=openAdoption;
+
+document.getElementById("catListButton")
+  .onclick=()=>{
+
+    openCatList();
+
+    document.getElementById("catsOverlay")
+      .classList.remove("hidden");
+
+  };
+
+document.getElementById("trainingButton")
+  .onclick=openTraining;
+
+document.getElementById("shopButton")
+  .onclick=openShop;
+
+document.getElementById("roomsButton")
+  .onclick=openRooms;
+
+document.getElementById("homeButton")
+  .onclick=()=>{
+
+    currentRoom="living";
+
+    buildWorld();
+
+  };
+
+document.getElementById("weatherButton")
+  .onclick=()=>{
+
+    updateWeather();
+
+    updateLighting();
+
+    document.getElementById("weatherOverlay")
+      .classList.remove("hidden");
+
+  };
+
+document.getElementById("closeAdoption")
+  .onclick=()=>{
+
+    document.getElementById("adoptionOverlay")
+      .classList.add("hidden");
+
+  };
+
+document.getElementById("closeCats")
+  .onclick=()=>{
+
+    document.getElementById("catsOverlay")
+      .classList.add("hidden");
+
+  };
+
+document.getElementById("closeTraining")
+  .onclick=()=>{
+
+    document.getElementById("trainingOverlay")
+      .classList.add("hidden");
+
+  };
+
+document.getElementById("closeShop")
+  .onclick=()=>{
+
+    document.getElementById("shopOverlay")
+      .classList.add("hidden");
+
+  };
+
+document.getElementById("closeRooms")
+  .onclick=()=>{
+
+    document.getElementById("roomsOverlay")
+      .classList.add("hidden");
+
+  };
+
+document.getElementById("closeWeather")
+  .onclick=()=>{
+
+    document.getElementById("weatherOverlay")
+      .classList.add("hidden");
+
+  };
+
+/* =========================================================
+   MESSAGE
+========================================================= */
+
+let messageTimer=null;
+
+function showMessage(text){
+
+  const el=document.getElementById("message");
+
+  el.textContent=text;
+
+  el.classList.add("show");
+
+  clearTimeout(messageTimer);
+
+  messageTimer=setTimeout(
+    ()=>el.classList.remove("show"),
+    2200
+  );
+
+}
+
+/* =========================================================
+   STARTUP
+========================================================= */
+
+loadGame();
+
+updateWeather();
+
+updateLighting();
+
+buildWorld();
+
+updateShopUI();
+
+if(myCats.length===0){
+
+  setTimeout(()=>{
+
+    openAdoption();
+
+  },500);
+
+}else{
+
+  activeCatIndex=0;
+
+  updateCatPanel();
+
+}
+
+/* =========================================================
+   GAME LOOP
+========================================================= */
+
+let lastTime=performance.now();
+
+function animate(now){
+
+  requestAnimationFrame(animate);
+
+  const dt=
+    Math.min(
+      .05,
+      (now-lastTime)/1000
+    );
+
+  lastTime=now;
+
+  movePlayer(dt);
+  updateCats(dt);
+  updateNeeds(dt);
+  updateTime(dt);
+
+  renderer.render(
+    scene,
+    camera
+  );
+
+}
+
+animate(lastTime);
+
+/* =========================================================
+   RESIZE
+========================================================= */
+
+addEventListener("resize",()=>{
+
+  camera.aspect=
+    innerWidth/innerHeight;
+
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(
+    innerWidth,
+    innerHeight
+  );
+
+});
+
+</script>
+
+</body>
+</html>
